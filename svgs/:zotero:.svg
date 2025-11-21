@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve"
+  style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2"
+  viewBox="0 0 100 100">
+  <!-- 白い角丸背景（より丸く） -->
+  <rect x="10" y="10" width="80" height="80" rx="20" ry="20" fill="white"/>
+
+  <!-- 上部の黒い棒（外側） -->
+  <rect x="33" y="0" width="30" height="10" fill="black"/>
+
+  <!-- 左側の黒い棒（外側） -->
+  <rect x="0" y="40" width="10" height="30" fill="black"/>
+
+  <!-- 右側の黒い棒（外側） -->
+  <rect x="90" y="25" width="10" height="30" fill="black"/>
+
+  <!-- 中央のZ文字（より太く、大きく） -->
+  <path d="M25 22 L69 22 L75 28 L44 65 L75 65 L75 78 L31 78 L25 72 L56 35 L25 35 Z" fill="#000000"/>
+  </svg>
