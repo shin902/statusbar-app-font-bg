@@ -7,10 +7,26 @@ import { pathToFileURL } from "node:url";
 export function install(replaceInScriptPath, refreshSketchybar = true) {
   const { iconMapBashFn } = build();
 
+  // Detect platform: macOS or Linux
+  const platform = process.platform;
+  const fontDir = platform === 'darwin'
+    ? `${process.env.HOME}/Library/Fonts`
+    : `${process.env.HOME}/.local/share/fonts`;
+
+  // Create font directory if it doesn't exist
+  if (!fs.existsSync(fontDir)) {
+    fs.mkdirSync(fontDir, { recursive: true });
+  }
+
   fs.copyFileSync(
     "./public/dist/sketchybar-app-font-bg.ttf",
-    `${process.env.HOME}/Library/Fonts/sketchybar-app-font-bg.ttf`
+    `${fontDir}/sketchybar-app-font-bg.ttf`
   );
+
+  // Update font cache on Linux
+  if (platform === 'linux') {
+    execSync("fc-cache -fv", { stdio: "inherit" });
+  }
 
   if (replaceInScriptPath) {
     const pathToScript = path.resolve(replaceInScriptPath);
@@ -48,7 +64,7 @@ export function install(replaceInScriptPath, refreshSketchybar = true) {
 
   }
 
-  if (refreshSketchybar) {
+  if (refreshSketchybar && platform === 'darwin') {
     execSync("sketchybar --reload");
   }
 }
