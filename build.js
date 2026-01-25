@@ -6,19 +6,65 @@ export const startMarker = "### START-OF-ICON-MAP";
 export const endMarker = "### END-OF-ICON-MAP";
 
 export function build() {
-  execSync("./node_modules/.bin/svgtofont -s svgs/ -o public/dist/", {
-    stdio: "inherit",
-  });
+  // For mac/Linux: temporarily rename SVG and mapping files from -name- to :name: for font generation
+  const isMacOrLinux = process.platform !== 'win32';
+  const renamedSvgFiles = [];
+  const renamedMappingFiles = [];
+  
+  if (isMacOrLinux) {
+    // Rename SVG files
+    const svgFiles = fs.readdirSync("./svgs").filter(f => f.endsWith(".svg"));
+    for (const file of svgFiles) {
+      const oldPath = `./svgs/${file}`;
+      const newPath = `./svgs/${file.replace(/^-|-(?=\.svg$)/g, ':')}`;
+      if (oldPath !== newPath) {
+        fs.renameSync(oldPath, newPath);
+        renamedSvgFiles.push({ oldPath, newPath });
+      }
+    }
+    
+    // Rename mapping files
+    const mappingFiles = fs.readdirSync("./mappings").filter(f => !f.startsWith('.'));
+    for (const file of mappingFiles) {
+      const oldPath = `./mappings/${file}`;
+      const newPath = `./mappings/${file.replace(/^-|-$/g, ':')}`;
+      if (oldPath !== newPath) {
+        fs.renameSync(oldPath, newPath);
+        renamedMappingFiles.push({ oldPath, newPath });
+      }
+    }
+  }
+  
+  try {
+    execSync("./node_modules/.bin/svgtofont -s svgs/ -o public/dist/", {
+      stdio: "inherit",
+    });
 
-  const iconMap = fs.readdirSync("./mappings").map((file) => {
-    const iconName = file.replace(".svg", "");
-    const appNames = fs.readFileSync(`./mappings/${file}`, "utf8").trim();
-    return {
-      iconName,
-      appNames,
-    };
-  });
+    const iconMap = fs.readdirSync("./mappings").filter(f => !f.startsWith('.')).map((file) => {
+      const iconName = file;
+      const appNames = fs.readFileSync(`./mappings/${file}`, "utf8").trim();
+      return {
+        iconName,
+        appNames,
+      };
+    });
 
+    const result = generateIconMapFiles(iconMap);
+    return result;
+  } finally {
+    // Restore original file names
+    if (isMacOrLinux) {
+      for (const { oldPath, newPath } of renamedSvgFiles.reverse()) {
+        fs.renameSync(newPath, oldPath);
+      }
+      for (const { oldPath, newPath } of renamedMappingFiles.reverse()) {
+        fs.renameSync(newPath, oldPath);
+      }
+    }
+  }
+}
+
+function generateIconMapFiles(iconMap) {
   const iconMapBashFn = `
 ${startMarker}
 function __icon_map() {
